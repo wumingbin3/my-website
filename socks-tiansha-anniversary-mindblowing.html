@@ -536,19 +536,13 @@
         <div class="control-btn" onclick="createExplosion()">💥 爆炸</div>
     </div>
 
-    <!-- 音乐播放器 -->
-    <div class="music-player">
-        <iframe 
-            id="musicFrame"
-            frameborder="no" 
-            border="0" 
-            marginwidth="0" 
-            marginheight="0" 
-            width=0 
-            height=0 
-            src="https://music.163.com/outchain/player?type=2&id=26787229&auto=0&height=66">
-        </iframe>
-    </div>
+    <!-- 音乐播放器 - 使用更可靠的方案 -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+        <!-- 备用音源 -->
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE" type="audio/wav">
+        您的浏览器不支持音频播放。
+    </audio>
 
     <!-- 信息显示 -->
     <div class="info-display">
@@ -725,85 +719,108 @@
 
         function toggleMusic() {
             musicEnabled = !musicEnabled;
-            const musicFrame = document.getElementById('musicFrame');
             const musicIcon = document.getElementById('musicIcon');
+            const audio = document.getElementById('backgroundMusic');
             
             if (musicEnabled) {
-                // 尝试播放网易云音乐
-                try {
-                    // 修改iframe的src来启用自动播放
-                    const currentSrc = musicFrame.src;
-                    const autoPlaySrc = currentSrc.replace('auto=0', 'auto=1');
-                    musicFrame.src = autoPlaySrc;
-                    
-                    // 同时创建一个可见的播放器作为备选
-                    if (!window.visibleMusicPlayer) {
-                        createVisibleMusicPlayer();
-                    }
-                    
+                // 尝试播放内置音频
+                audio.play().then(() => {
                     musicIcon.textContent = '🔇';
-                    console.log('音乐开启 - Two Is Better Than One');
-                } catch (e) {
-                    console.log('网易云音乐播放失败，使用备选方案');
-                    createFallbackMusic();
-                }
+                    console.log('音乐开启');
+                    showMusicNotification('🎵 音乐已开启');
+                }).catch(error => {
+                    console.log('音频播放失败:', error);
+                    // 如果内置音频失败，尝试创建外部音乐播放器
+                    createExternalMusicPlayer();
+                    musicIcon.textContent = '🔇';
+                });
             } else {
-                // 停止播放
-                const pauseSrc = musicFrame.src.replace('auto=1', 'auto=0');
-                musicFrame.src = pauseSrc;
-                
+                audio.pause();
                 musicIcon.textContent = '🎵';
                 console.log('音乐关闭');
+                showMusicNotification('🔇 音乐已关闭');
             }
         }
 
-        function createVisibleMusicPlayer() {
-            // 创建一个可见的音乐播放器
+        function createExternalMusicPlayer() {
+            // 创建一个外部音乐播放器（YouTube或其他平台）
+            if (window.externalMusicPlayer) {
+                window.externalMusicPlayer.style.display = 'block';
+                return;
+            }
+
             const player = document.createElement('div');
             player.style.cssText = `
                 position: fixed;
-                bottom: 100px;
-                right: 20px;
-                background: rgba(0, 0, 0, 0.8);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 10px;
-                padding: 10px;
-                z-index: 1000;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.9);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 15px;
+                padding: 20px;
+                z-index: 10000;
                 backdrop-filter: blur(10px);
-                font-size: 12px;
                 color: white;
+                text-align: center;
+                min-width: 300px;
             `;
+            
             player.innerHTML = `
-                <div>🎵 Two Is Better Than One</div>
-                <iframe 
-                    frameborder="no" 
-                    border="0" 
-                    marginwidth="0" 
-                    marginheight="0" 
-                    width=200 
-                    height=32 
-                    src="https://music.163.com/outchain/player?type=2&id=26787229&auto=1&height=32">
-                </iframe>
+                <h3 style="margin-bottom: 15px; color: #ff6b6b;">🎵 Two Is Better Than One</h3>
+                <p style="margin-bottom: 15px; font-size: 14px;">由于浏览器限制，请点击下方链接播放音乐：</p>
+                <a href="https://www.youtube.com/watch?v=2WpP8lIywXQ" target="_blank" 
+                   style="display: inline-block; background: #ff6b6b; color: white; padding: 10px 20px; 
+                   text-decoration: none; border-radius: 5px; margin: 5px;">
+                    ▶️ YouTube播放
+                </a>
+                <br>
+                <a href="https://music.163.com/#/song?id=26787229" target="_blank"
+                   style="display: inline-block; background: #8338ec; color: white; padding: 10px 20px; 
+                   text-decoration: none; border-radius: 5px; margin: 5px;">
+                    🎵 网易云音乐
+                </a>
+                <br>
+                <button onclick="this.parentElement.style.display='none'" 
+                        style="margin-top: 15px; background: rgba(255,255,255,0.2); color: white; 
+                               border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; 
+                               border-radius: 5px; cursor: pointer;">
+                    ✖️ 关闭
+                </button>
             `;
+            
             document.body.appendChild(player);
-            window.visibleMusicPlayer = player;
+            window.externalMusicPlayer = player;
         }
 
-        function createFallbackMusic() {
-            // 备用音乐方案
-            if (!window.backgroundMusic) {
-                window.backgroundMusic = new Audio();
-                // 使用免费的背景音乐链接
-                window.backgroundMusic.src = 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
-                window.backgroundMusic.loop = true;
-                window.backgroundMusic.volume = 0.3;
-                
-                window.backgroundMusic.play().catch(e => {
-                    console.log('备用音乐播放失败');
-                });
-            } else {
-                window.backgroundMusic.play();
+        function showMusicNotification(message) {
+            // 显示音乐通知
+            if (window.musicNotification) {
+                window.musicNotification.remove();
             }
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 10px 15px;
+                border-radius: 5px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                z-index: 1000;
+                font-size: 14px;
+                backdrop-filter: blur(10px);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            window.musicNotification = notification;
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         function toggleParticles() {
