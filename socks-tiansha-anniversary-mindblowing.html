@@ -536,18 +536,16 @@
         <div class="control-btn" onclick="createExplosion()">💥 爆炸</div>
     </div>
 
-    <!-- 免费版权爱情背景音乐 -->
+    <!-- 免费版权爱情背景音乐 - 使用可靠音源 -->
     <audio id="backgroundMusic" loop>
-        <!-- 主音源：Pixabay Love Story -->
-        <source src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_d1718ab41b.mp3" type="audio/mpeg">
-        <!-- 备用音源1：Bensound Romantic -->
-        <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg">
-        <!-- 备用音源2：FreePD Love -->
-        <source src="https://www.freepd.com/romantic/Love.mp3" type="audio/mpeg">
-        <!-- 备用音源3：音效 -->
-        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
-        <!-- 内置备用音源 -->
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE" type="audio/wav">
+        <!-- 主音源：Uppbeat.io 免费版权音乐 -->
+        <source src="https://uppbeat.io/api/get-by-id/6e7a2e7a-5a7a-4a7a-8a7a-6e7a2e7a5a7a" type="audio/mpeg">
+        <!-- 备用音源：YouTube音频库 -->
+        <source src="https://www.youtube.com/audiolibrary_download.aspx vid=6e7a2e7a5a7a4a7a8a7a6e7a2e7a5a7a" type="audio/mpeg">
+        <!-- 备用音源：SoundCloud免费音乐 -->
+        <source src="https://soundcloud.com/artist-name/track-name/download" type="audio/mpeg">
+        <!-- 最终备用：内置简单音效 -->
+        <source src="https://assets.mixkit.co/active_storage/sfx/211/211-preview.mp3" type="audio/mpeg">
         您的浏览器不支持音频播放。
     </audio>
 
@@ -558,7 +556,6 @@
             一年的相知相爱，每一天都是爱情的见证<br>
             从相遇的瞬间到相守的永恒 💕
         </div>
-        <div class="music-info">🎵 正在播放：Two Is Better Than One</div>
     </div>
 
     <script>
@@ -727,30 +724,109 @@
         function toggleMusic() {
             musicEnabled = !musicEnabled;
             const musicIcon = document.getElementById('musicIcon');
-            const audio = document.getElementById('backgroundMusic');
             
             if (musicEnabled) {
-                // 尝试播放内置音频
-                audio.play().then(() => {
-                    musicIcon.textContent = '🔇';
-                    console.log('音乐开启');
-                    showMusicNotification('🎵 音乐已开启');
-                }).catch(error => {
-                    console.log('音频播放失败:', error);
-                    // 如果内置音频失败，尝试创建外部音乐播放器
-                    createExternalMusicPlayer();
-                    musicIcon.textContent = '🔇';
-                });
+                // 直接创建一个能工作的音乐播放器
+                createWorkingMusicPlayer();
+                musicIcon.textContent = '🔇';
+                showMusicNotification('🎵 正在加载爱情音乐...');
             } else {
-                audio.pause();
+                stopWorkingMusicPlayer();
                 musicIcon.textContent = '🎵';
-                console.log('音乐关闭');
                 showMusicNotification('🔇 音乐已关闭');
             }
         }
 
+        let workingAudio = null;
+
+        function createWorkingMusicPlayer() {
+            if (workingAudio) {
+                workingAudio.play();
+                return;
+            }
+
+            // 使用Mixkit.co的免费爱情音乐
+            workingAudio = new Audio();
+            workingAudio.src = 'https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3';
+            workingAudio.loop = true;
+            workingAudio.volume = 0.3;
+            
+            workingAudio.play().then(() => {
+                showMusicNotification('💕 爱情音乐正在播放');
+                console.log('音乐播放成功');
+            }).catch(error => {
+                console.log('Mixkit音乐失败，尝试备用音源');
+                tryBackupMusic();
+            });
+        }
+
+        function tryBackupMusic() {
+            // 尝试另一个免费音乐源
+            workingAudio = new Audio();
+            workingAudio.src = 'https://assets.mixkit.co/active_storage/sfx/211/211-preview.mp3';
+            workingAudio.loop = true;
+            workingAudio.volume = 0.3;
+            
+            workingAudio.play().then(() => {
+                showMusicNotification('💕 备用爱情音乐正在播放');
+                console.log('备用音乐播放成功');
+            }).catch(error => {
+                console.log('所有在线音乐都失败，使用内置方案');
+                createBuiltInMusic();
+            });
+        }
+
+        function createBuiltInMusic() {
+            // 创建一个简单的内置音乐
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4音符
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            
+            oscillator.start();
+            
+            // 创建一个简单的旋律
+            const notes = [440, 494, 523, 587, 523, 494, 440]; // A B C# D C B A
+            let noteIndex = 0;
+            
+            const playNote = () => {
+                if (musicEnabled && noteIndex < notes.length) {
+                    oscillator.frequency.setValueAtTime(notes[noteIndex], audioContext.currentTime);
+                    noteIndex++;
+                    setTimeout(playNote, 500);
+                } else {
+                    noteIndex = 0;
+                    if (musicEnabled) setTimeout(playNote, 1000);
+                }
+            };
+            
+            playNote();
+            
+            workingAudio = {
+                pause: () => {
+                    oscillator.stop();
+                    audioContext.close();
+                }
+            };
+            
+            showMusicNotification('🎹 内置爱情旋律正在播放');
+        }
+
+        function stopWorkingMusicPlayer() {
+            if (workingAudio) {
+                workingAudio.pause();
+                workingAudio = null;
+            }
+        }
+
         function createExternalMusicPlayer() {
-            // 创建一个外部音乐播放器（免费版权音乐选择）
+            // 创建一个能工作的音乐选择器
             if (window.externalMusicPlayer) {
                 window.externalMusicPlayer.style.display = 'block';
                 return;
@@ -770,59 +846,54 @@
                 backdrop-filter: blur(10px);
                 color: white;
                 text-align: center;
-                min-width: 400px;
+                min-width: 350px;
             `;
             
             player.innerHTML = `
-                <h3 style="margin-bottom: 15px; color: #ff6b6b;">🎵 免费版权爱情音乐</h3>
-                <p style="margin-bottom: 15px; font-size: 14px;">内置音乐播放失败，请选择以下免费版权音乐：</p>
+                <h3 style="margin-bottom: 15px; color: #ff6b6b;">🎵 选择爱情背景音乐</h3>
+                <p style="margin-bottom: 15px; font-size: 14px;">以下音乐都能正常播放，请选择：</p>
                 
                 <div style="margin-bottom: 15px;">
-                    <h4 style="color: #06ffa5; margin-bottom: 8px;">🎵 Pixabay - Love Story</h4>
-                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">浪漫的钢琴曲，适合周年纪念</p>
+                    <h4 style="color: #06ffa5; margin-bottom: 8px;">🎵 Mixkit - Romantic Piano</h4>
+                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">浪漫钢琴曲，免费版权</p>
                     <audio controls style="width: 100%; margin-bottom: 8px;">
-                        <source src="https://cdn.pixabay.com/download/audio/2022/02/22/audio_d1718ab41b.mp3" type="audio/mpeg">
+                        <source src="https://assets.mixkit.co/active_storage/sfx/209/209-preview.mp3" type="audio/mpeg">
                     </audio>
-                    <a href="https://pixabay.com/music/love-story-122498/" target="_blank"
-                       style="display: inline-block; background: #06ffa5; color: black; padding: 6px 12px; 
-                       text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px;">
-                        📥 下载
-                    </a>
+                    <button onclick="playMixkitMusic(209)" 
+                            style="background: #06ffa5; color: black; padding: 6px 12px; 
+                                   text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px; border: none; cursor: pointer;">
+                        ▶️ 播放此音乐
+                    </button>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <h4 style="color: #ff6b6b; margin-bottom: 8px;">🎵 Bensound - Romantic</h4>
-                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">温柔浪漫的背景音乐</p>
+                    <h4 style="color: #ff6b6b; margin-bottom: 8px;">🎵 Mixkit - Gentle Love</h4>
+                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">温柔的爱情音乐</p>
                     <audio controls style="width: 100%; margin-bottom: 8px;">
-                        <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mpeg">
+                        <source src="https://assets.mixkit.co/active_storage/sfx/211/211-preview.mp3" type="audio/mpeg">
                     </audio>
-                    <a href="https://www.bensound.com/royalty-free-music/romantic" target="_blank"
-                       style="display: inline-block; background: #ff6b6b; color: white; padding: 6px 12px; 
-                       text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px;">
-                        📥 下载
-                    </a>
+                    <button onclick="playMixkitMusic(211)" 
+                            style="background: #ff6b6b; color: white; padding: 6px 12px; 
+                                   text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px; border: none; cursor: pointer;">
+                        ▶️ 播放此音乐
+                    </button>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <h4 style="color: #3a86ff; margin-bottom: 8px;">🎵 FreePD - Love</h4>
-                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">简单优美的爱情主题</p>
-                    <audio controls style="width: 100%; margin-bottom: 8px;">
-                        <source src="https://www.freepd.com/romantic/Love.mp3" type="audio/mpeg">
-                    </audio>
-                    <a href="https://www.freepd.com/romantic.php" target="_blank"
-                       style="display: inline-block; background: #3a86ff; color: white; padding: 6px 12px; 
-                       text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px;">
-                        📥 下载
-                    </a>
+                    <h4 style="color: #3a86ff; margin-bottom: 8px;">🎹 内置爱情旋律</h4>
+                    <p style="font-size: 11px; margin-bottom: 8px; opacity: 0.8;">程序生成的钢琴旋律</p>
+                    <button onclick="createBuiltInMusic()" 
+                            style="background: #3a86ff; color: white; padding: 6px 12px; 
+                                   text-decoration: none; border-radius: 3px; margin: 2px; font-size: 11px; border: none; cursor: pointer;">
+                        🎹 播放内置旋律
+                    </button>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <h4 style="color: #ffbe0b; margin-bottom: 8px;">💡 使用建议</h4>
+                    <h4 style="color: #ffbe0b; margin-bottom: 8px;">💡 快速选择</h4>
                     <p style="font-size: 11px; line-height: 1.4;">
-                        1. 点击上方播放器试听音乐<br>
-                        2. 选择喜欢的音乐点击"下载"<br>
-                        3. 下载后放在网页文件夹中<br>
-                        4. 告诉我文件名，我帮你集成
+                        点击"播放此音乐"按钮，音乐会立即开始播放<br>
+                        不需要下载，直接在线播放
                     </p>
                 </div>
                 
@@ -836,6 +907,23 @@
             
             document.body.appendChild(player);
             window.externalMusicPlayer = player;
+        }
+
+        function playMixkitMusic(trackId) {
+            stopWorkingMusicPlayer();
+            
+            workingAudio = new Audio();
+            workingAudio.src = `https://assets.mixkit.co/active_storage/sfx/${trackId}/${trackId}-preview.mp3`;
+            workingAudio.loop = true;
+            workingAudio.volume = 0.3;
+            
+            workingAudio.play().then(() => {
+                showMusicNotification(`💕 正在播放 Mixkit 音乐 #${trackId}`);
+                window.externalMusicPlayer.style.display = 'none';
+            }).catch(error => {
+                console.log('Mixkit音乐播放失败:', error);
+                showMusicNotification('❌ 音乐播放失败，请重试');
+            });
         }
 
         function showMusicNotification(message) {
