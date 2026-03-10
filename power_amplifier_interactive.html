@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>400MHz-470MHz 10W功率放大器原理图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .schematic-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .schematic-canvas {
+            width: 100%;
+            height: 800px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: #fff;
+            position: relative;
+            overflow: auto;
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .spec-table th,
+        .spec-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .spec-table th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            font-weight: bold;
+        }
+
+        .spec-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .bom-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .bom-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .bom-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .bom-item p {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin: 4px 0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-ok {
+            background: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        }
+
+        .status-warning {
+            background: #f39c12;
+            box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+        }
+
+        .status-error {
+            background: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        /* 电路图绘制样式 */
+        .circuit-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .component {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            filter: brightness(1.2);
+        }
+
+        .wire {
+            stroke: #2c3e50;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .component-box {
+            fill: #ecf0f1;
+            stroke: #34495e;
+            stroke-width: 2;
+        }
+
+        .power-rail {
+            stroke: #e74c3c;
+            stroke-width: 3;
+        }
+
+        .ground-rail {
+            stroke: #34495e;
+            stroke-width: 3;
+        }
+
+        .component-label {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            fill: #2c3e50;
+        }
+
+        .pin {
+            fill: #34495e;
+        }
+
+        .connection-point {
+            fill: #3498db;
+            stroke: #2980b9;
+            stroke-width: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-panel {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .warning-panel {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📡 400MHz-470MHz 10W功率放大器原理图</h1>
+            <p>使用RQA0011 LDMOS功率管 | 输出杂散 &lt; -36dBm</p>
+        </div>
+
+        <div class="main-content">
+            <div class="schematic-panel">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #2c3e50;">
+                    🔧 交互式电路原理图
+                </h2>
+                
+                <div class="schematic-canvas">
+                    <svg class="circuit-svg" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 背景网格 -->
+                        <defs>
+                            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                        
+                        <!-- 电源轨 -->
+                        <line x1="50" y1="50" x2="1150" y2="50" class="power-rail"/>
+                        <text x="60" y="40" class="component-label">+28V</text>
+                        
+                        <!-- 地线轨 -->
+                        <line x1="50" y1="750" x2="1150" y2="750" class="ground-rail"/>
+                        <text x="60" y="770" class="component-label">GND</text>
+                        
+                        <!-- 输入匹配网络 -->
+                        <g id="input-match" class="component">
+                            <rect x="100" y="350" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="140" y="385" text-anchor="middle" class="component-label">C1</text>
+                            <text x="140" y="400" text-anchor="middle" class="component-label">22pF</text>
+                            
+                            <rect x="220" y="340" width="80" height="80" class="component-box" rx="5"/>
+                            <text x="260" y="385" text-anchor="middle" class="component-label">L1</text>
+                            <text x="260" y="400" text-anchor="middle" class="component-label">15nH</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 50 380 L 100 380" class="wire"/>
+                            <path d="M 180 380 L 220 380" class="wire"/>
+                            <path d="M 300 380 L 350 380" class="wire"/>
+                        </g>
+                        
+                        <!-- 偏置电路 -->
+                        <g id="bias-circuit" class="component">
+                            <rect x="100" y="150" width="100" height="60" class="component-box" rx="5"/>
+                            <text x="150" y="185" text-anchor="middle" class="component-label">R1</text>
+                            <text x="150" y="200" text-anchor="middle" class="component-label">10kΩ</text>
+                            
+                            <rect x="230" y="160" width="60" height="40" class="component-box" rx="20"/>
+                            <text x="260" y="185" text-anchor="middle" class="component-label">D1</text>
+                            
+                            <rect x="320" y="150" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="360" y="185" text-anchor="middle" class="component-label">C2</text>
+                            <text x="360" y="200" text-anchor="middle" class="component-label">100nF</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 50 180 L 100 180" class="wire"/>
+                            <path d="M 200 180 L 230 180" class="wire"/>
+                            <path d="M 290 180 L 320 180" class="wire"/>
+                            <path d="M 400 180 L 450 180" class="wire"/>
+                            <path d="M 360 210 L 360 750" class="wire"/>
+                        </g>
+                        
+                        <!-- RQA0011功率管 -->
+                        <g id="rqa0011" class="component">
+                            <rect x="450" y="300" width="120" height="200" class="component-box" rx="10"/>
+                            <text x="510" y="320" text-anchor="middle" class="component-label" style="font-size: 16px; font-weight: bold;">RQA0011</text>
+                            <text x="510" y="340" text-anchor="middle" class="component-label">LDMOS</text>
+                            
+                            <!-- 引脚 -->
+                            <circle cx="450" cy="350" r="5" class="connection-point"/>
+                            <text x="430" y="355" text-anchor="end" class="component-label">G</text>
+                            
+                            <circle cx="570" cy="350" r="5" class="connection-point"/>
+                            <text x="590" y="355" text-anchor="start" class="component-label">D</text>
+                            
+                            <circle cx="510" cy="500" r="5" class="connection-point"/>
+                            <text x="530" y="505" text-anchor="start" class="component-label">S</text>
+                            
+                            <!-- 连接到地 -->
+                            <path d="M 510 500 L 510 750" class="wire"/>
+                            
+                            <!-- RFC -->
+                            <rect x="600" y="340" width="100" height="60" class="component-box" rx="5"/>
+                            <text x="650" y="375" text-anchor="middle" class="component-label">L2</text>
+                            <text x="650" y="390" text-anchor="middle" class="component-label">100nH</text>
+                            <text x="650" y="405" text-anchor="middle" class="component-label">RFC</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 570 350 L 600 350" class="wire"/>
+                            <path d="M 700 350 L 750 350" class="wire"/>
+                        </g>
+                        
+                        <!-- 输出匹配网络 -->
+                        <g id="output-match" class="component">
+                            <rect x="750" y="330" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="790" y="365" text-anchor="middle" class="component-label">L3</text>
+                            <text x="790" y="380" text-anchor="middle" class="component-label">12nH</text>
+                            
+                            <rect x="850" y="320" width="80" height="80" class="component-box" rx="5"/>
+                            <text x="890" y="365" text-anchor="middle" class="component-label">C4</text>
+                            <text x="890" y="380" text-anchor="middle" class="component-label">27pF</text>
+                            
+                            <rect x="950" y="340" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="990" y="375" text-anchor="middle" class="component-label">L4</text>
+                            <text x="990" y="390" text-anchor="middle" class="component-label">18nH</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 830 360 L 850 360" class="wire"/>
+                            <path d="M 930 360 L 950 360" class="wire"/>
+                            <path d="M 1030 360 L 1080 360" class="wire"/>
+                        </g>
+                        
+                        <!-- 输出滤波器 -->
+                        <g id="output-filter" class="component">
+                            <text x="1050" y="340" class="component-label" style="font-weight: bold;">7阶低通滤波器</text>
+                            
+                            <!-- 第一级 -->
+                            <rect x="1050" y="350" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="385" text-anchor="middle" class="component-label">L6</text>
+                            <text x="1090" y="400" text-anchor="middle" class="component-label">33nH</text>
+                            
+                            <rect x="1050" y="430" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="465" text-anchor="middle" class="component-label">C9</text>
+                            <text x="1090" y="480" text-anchor="middle" class="component-label">120pF</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 1130 380 L 1130 430" class="wire"/>
+                            <path d="M 1130 460 L 1130 510" class="wire"/>
+                            
+                            <!-- 第二级 -->
+                            <rect x="1050" y="510" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="545" text-anchor="middle" class="component-label">L7</text>
+                            <text x="1090" y="560" text-anchor="middle" class="component-label">27nH</text>
+                            
+                            <rect x="1050" y="590" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="625" text-anchor="middle" class="component-label">C10</text>
+                            <text x="1090" y="640" text-anchor="middle" class="component-label">150pF</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 1130 540 L 1130 590" class="wire"/>
+                            <path d="M 1130 620 L 1130 670" class="wire"/>
+                            
+                            <!-- 第三级 -->
+                            <rect x="1050" y="670" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="705" text-anchor="middle" class="component-label">L8</text>
+                            <text x="1090" y="720" text-anchor="middle" class="component-label">22nH</text>
+                            
+                            <rect x="1050" y="750" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="1090" y="785" text-anchor="middle" class="component-label">C11</text>
+                            <text x="1090" y="800" text-anchor="middle" class="component-label">180pF</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 1130 700 L 1130 750" class="wire"/>
+                            <path d="M 1130 780 L 1130 810" class="wire"/>
+                        </g>
+                        
+                        <!-- 输出端口 -->
+                        <g id="output-port" class="component">
+                            <rect x="1120" y="350" width="60" height="40" class="component-box" rx="20"/>
+                            <text x="1150" y="375" text-anchor="middle" class="component-label">50Ω</text>
+                            
+                            <path d="M 1130 370 L 1120 370" class="wire"/>
+                        </g>
+                        
+                        <!-- 温度保护电路 -->
+                        <g id="temp-protection" class="component">
+                            <rect x="100" y="550" width="100" height="60" class="component-box" rx="5"/>
+                            <text x="150" y="585" text-anchor="middle" class="component-label">R4</text>
+                            <text x="150" y="600" text-anchor="middle" class="component-label">10kΩ</text>
+                            
+                            <rect x="220" y="560" width="80" height="40" class="component-box" rx="20"/>
+                            <text x="260" y="585" text-anchor="middle" class="component-label">NTC</text>
+                            <text x="260" y="600" text-anchor="middle" class="component-label">10kΩ</text>
+                            
+                            <rect x="320" y="550" width="100" height="60" class="component-box" rx="5"/>
+                            <text x="370" y="585" text-anchor="middle" class="component-label">U1</text>
+                            <text x="370" y="600" text-anchor="middle" class="component-label">LM393</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 200 580 L 220 580" class="wire"/>
+                            <path d="M 300 580 L 320 580" class="wire"/>
+                            <path d="M 420 580 L 450 580" class="wire"/>
+                            <path d="M 260 600 L 260 750" class="wire"/>
+                        </g>
+                        
+                        <!-- 电源去耦 -->
+                        <g id="power-decoupling" class="component">
+                            <rect x="600" y="100" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="640" y="135" text-anchor="middle" class="component-label">L5</text>
+                            <text x="640" y="150" text-anchor="middle" class="component-label">10μH</text>
+                            
+                            <rect x="700" y="90" width="80" height="40" class="component-box" rx="5"/>
+                            <text x="740" y="115" text-anchor="middle" class="component-label">C7</text>
+                            <text x="740" y="130" text-anchor="middle" class="component-label">10μF</text>
+                            
+                            <rect x="800" y="100" width="80" height="60" class="component-box" rx="5"/>
+                            <text x="840" y="135" text-anchor="middle" class="component-label">C8</text>
+                            <text x="840" y="150" text-anchor="middle" class="component-label">100nF</text>
+                            
+                            <!-- 连接线 -->
+                            <path d="M 50 120 L 600 120" class="wire"/>
+                            <path d="M 680 120 L 700 120" class="wire"/>
+                            <path d="M 780 120 L 800 120" class="wire"/>
+                            <path d="M 880 120 L 900 120" class="wire"/>
+                            <path d="M 740 130 L 740 750" class="wire"/>
+                            <path d="M 840 160 L 840 750" class="wire"/>
+                        </g>
+                        
+                        <!-- 标注 -->
+                        <text x="50" y="30" class="component-label" style="font-size: 14px; font-weight: bold;">输入匹配网络</text>
+                        <text x="50" y="130" class="component-label" style="font-size: 14px; font-weight: bold;">偏置电路</text>
+                        <text x="450" y="280" class="component-label" style="font-size: 14px; font-weight: bold;">功率放大级</text>
+                        <text x="750" y="310" class="component-label" style="font-size: 14px; font-weight: bold;">输出匹配网络</text>
+                        <text x="1050" y="320" class="component-label" style="font-size: 14px; font-weight: bold;">输出滤波器</text>
+                        <text x="50" y="530" class="component-label" style="font-size: 14px; font-weight: bold;">温度保护</text>
+                        <text x="600" y="80" class="component-label" style="font-size: 14px; font-weight: bold;">电源去耦</text>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="control-section">
+                    <h3>🎛️ 电路控制</h3>
+                    <button class="btn" onclick="highlightComponent('input-match')">高亮输入匹配</button>
+                    <button class="btn" onclick="highlightComponent('rqa0011')">高亮功率管</button>
+                    <button class="btn" onclick="highlightComponent('output-match')">高亮输出匹配</button>
+                    <button class="btn" onclick="highlightComponent('output-filter')">高亮滤波器</button>
+                    <button class="btn" onclick="resetHighlight()">重置高亮</button>
+                </div>
+
+                <div class="control-section">
+                    <h3>📊 技术规格</h3>
+                    <table class="spec-table">
+                        <tr>
+                            <th>参数</th>
+                            <th>数值</th>
+                            <th>单位</th>
+                        </tr>
+                        <tr>
+                            <td>频率范围</td>
+                            <td>400-470</td>
+                            <td>MHz</td>
+                        </tr>
+                        <tr>
+                            <td>输出功率</td>
+                            <td>10</td>
+                            <td>W</td>
+                        </tr>
+                        <tr>
+                            <td>功率增益</td>
+                            <td>≥18</td>
+                            <td>dB</td>
+                        </tr>
+                        <tr>
+                            <td>效率</td>
+                            <td>≥55</td>
+                            <td>%</td>
+                        </tr>
+                        <tr>
+                            <td>杂散抑制</td>
+                            <td>≤-36</td>
+                            <td>dBm</td>
+                        </tr>
+                        <tr>
+                            <td>输入阻抗</td>
+                            <td>50</td>
+                            <td>Ω</td>
+                        </tr>
+                        <tr>
+                            <td>输出阻抗</td>
+                            <td>50</td>
+                            <td>Ω</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="control-section">
+                    <h3>🛠️ 元器件清单</h3>
+                    
+                    <div class="bom-item">
+                        <h4><span class="status-indicator status-ok"></span>RQA0011 - 功率管</h4>
+                        <p>型号：RQA0011ANS</p>
+                        <p>封装：TO-220</p>
+                        <p>制造商：Renesas</p>
+                    </div>
+                    
+                    <div class="bom-item">
+                        <h4><span class="status-indicator status-ok"></span>输入匹配网络</h4>
+                        <p>C1：22pF ±5% NP0/C0G</p>
+                        <p>L1：15nH ±10% 高频电感</p>
+                    </div>
+                    
+                    <div class="bom-item">
+                        <h4><span class="status-indicator status-ok"></span>偏置电路</h4>
+                        <p>R1：10kΩ ±1% 金属膜</p>
+                        <p>D1：1N4148 高速开关二极管</p>
+                        <p>C2：100nF ±10% X7R</p>
+                    </div>
+                    
+                    <div class="bom-item">
+                        <h4><span class="status-indicator status-ok"></span>输出匹配网络</h4>
+                        <p>L3：12nH ±5% 高频电感</p>
+                        <p>C4：27pF ±5% NP0/C0G</p>
+                        <p>L4：18nH ±5% 高频电感</p>
+                        <p>C5：47pF ±5% NP0/C0G</p>
+                        <p>C6：100pF ±5% NP0/C0G</p>
+                    </div>
+                    
+                    <div class="bom-item">
+                        <h4><span class="status-indicator status-ok"></span>输出滤波器</h4>
+                        <p>L6-L8：33nH, 27nH, 22nH ±5%</p>
+                        <p>C9-C11：120pF, 150pF, 180pF ±5%</p>
+                        <p>七阶切比雪夫低通滤波器</p>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>💡 设计特点</h3>
+                    <p>✅ 采用RQA0011 LDMOS功率管，确保高频性能</p>
+                    <p>✅ 七阶低通滤波器，保证杂散&lt;-36dBm</p>
+                    <p>✅ 温度保护电路，防止过热损坏</p>
+                    <p>✅ 多级电源去耦，确保稳定工作</p>
+                </div>
+
+                <div class="warning-panel">
+                    <h3>⚠️ 安全警告</h3>
+                    <p>⚡ 高压危险：28V直流电源</p>
+                    <p>📡 高频辐射：10W射频功率</p>
+                    <p>🔥 高温表面：功率管散热器</p>
+                    <p>⚡ 静电敏感：MOSFET栅极</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 组件高亮功能
+        function highlightComponent(componentId) {
+            // 重置所有高亮
+            resetHighlight();
+            
+            // 高亮指定组件
+            const component = document.getElementById(componentId);
+            if (component) {
+                const rects = component.querySelectorAll('rect');
+                rects.forEach(rect => {
+                    rect.style.fill = '#3498db';
+                    rect.style.opacity = '0.3';
+                    rect.style.filter = 'drop-shadow(0 0 10px rgba(52, 152, 219, 0.8))';
+                });
+                
+                const paths = component.querySelectorAll('path');
+                paths.forEach(path => {
+                    path.style.stroke = '#e74c3c';
+                    path.style.strokeWidth = '4';
+                    path.style.filter = 'drop-shadow(0 0 8px rgba(231, 76, 60, 0.8))';
+                });
+                
+                const texts = component.querySelectorAll('text');
+                texts.forEach(text => {
+                    text.style.fill = '#2c3e50';
+                    text.style.fontWeight = 'bold';
+                    text.style.fontSize = '14px';
+                });
+            }
+        }
+
+        function resetHighlight() {
+            // 重置所有组件样式
+            const allRects = document.querySelectorAll('.component-box');
+            allRects.forEach(rect => {
+                rect.style.fill = '#ecf0f1';
+                rect.style.opacity = '1';
+                rect.style.filter = 'none';
+            });
+            
+            const allPaths = document.querySelectorAll('.wire');
+            allPaths.forEach(path => {
+                path.style.stroke = '#2c3e50';
+                path.style.strokeWidth = '2';
+                path.style.filter = 'none';
+            });
+            
+            const allTexts = document.querySelectorAll('.component-label');
+            allTexts.forEach(text => {
+                text.style.fill = '#2c3e50';
+                text.style.fontWeight = 'normal';
+                text.style.fontSize = '12px';
+            });
+        }
+
+        // 组件点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const components = document.querySelectorAll('.component');
+            components.forEach(component => {
+                component.addEventListener('click', function() {
+                    const componentId = this.id;
+                    showComponentInfo(componentId);
+                });
+                
+                // 添加悬停效果
+                component.addEventListener('mouseenter', function() {
+                    this.style.cursor = 'pointer';
+                    const rects = this.querySelectorAll('rect');
+                    rects.forEach(rect => {
+                        rect.style.filter = 'brightness(1.1)';
+                    });
+                });
+                
+                component.addEventListener('mouseleave', function() {
+                    const rects = this.querySelectorAll('rect');
+                    rects.forEach(rect => {
+                        rect.style.filter = 'brightness(1)';
+                    });
+                });
+            });
+        });
+
+        function showComponentInfo(componentId) {
+            const info = {
+                'input-match': {
+                    name: '输入匹配网络',
+                    description: 'L型匹配网络，将50Ω输入阻抗匹配到RQA0011的最佳输入阻抗',
+                    components: ['C1: 22pF', 'L1: 15nH']
+                },
+                'rqa0011': {
+                    name: 'RQA0011功率管',
+                    description: 'LDMOS功率管，28V供电，10W输出功率',
+                    specs: ['VDS: 28V', 'IDQ: 50mA', 'Pout: 10W', '效率: 60%']
+                },
+                'output-match': {
+                    name: '输出匹配网络',
+                    description: 'π型匹配网络，将输出阻抗匹配到50Ω',
+                    components: ['L3: 12nH', 'C4: 27pF', 'L4: 18nH', 'C5: 47pF', 'C6: 100pF']
+                },
+                'output-filter': {
+                    name: '七阶低通滤波器',
+                    description: '切比雪夫低通滤波器，确保输出杂散<-36dBm',
+                    components: ['L6: 33nH', 'C9: 120pF', 'L7: 27nH', 'C10: 150pF', 'L8: 22nH', 'C11: 180pF']
+                }
+            };
+            
+            const componentInfo = info[componentId];
+            if (componentInfo) {
+                alert(`组件：${componentInfo.name}\n\n${componentInfo.description}\n\n包含元件：${componentInfo.components.join(', ')}`);
+            }
+        }
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case '1':
+                    highlightComponent('input-match');
+                    break;
+                case '2':
+                    highlightComponent('rqa0011');
+                    break;
+                case '3':
+                    highlightComponent('output-match');
+                    break;
+                case '4':
+                    highlightComponent('output-filter');
+                    break;
+                case '0':
+                    resetHighlight();
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
