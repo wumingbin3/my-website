@@ -416,6 +416,13 @@
             line-height: 1.6;
         }
 
+        .music-info {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            color: #ff6b6b;
+            opacity: 0.8;
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .cube-container {
@@ -529,6 +536,20 @@
         <div class="control-btn" onclick="createExplosion()">💥 爆炸</div>
     </div>
 
+    <!-- 音乐播放器 -->
+    <div class="music-player">
+        <iframe 
+            id="musicFrame"
+            frameborder="no" 
+            border="0" 
+            marginwidth="0" 
+            marginheight="0" 
+            width=0 
+            height=0 
+            src="https://music.163.com/outchain/player?type=2&id=26787229&auto=0&height=66">
+        </iframe>
+    </div>
+
     <!-- 信息显示 -->
     <div class="info-display">
         <div class="anniversary-date">📅 2025.05.27 ~ 2026.05.27</div>
@@ -536,6 +557,7 @@
             一年的相知相爱，每一天都是爱情的见证<br>
             从相遇的瞬间到相守的永恒 💕
         </div>
+        <div class="music-info">🎵 正在播放：Two Is Better Than One</div>
     </div>
 
     <script>
@@ -703,8 +725,85 @@
 
         function toggleMusic() {
             musicEnabled = !musicEnabled;
-            // 这里可以添加实际的音乐播放逻辑
-            console.log('音乐状态:', musicEnabled ? '开启' : '关闭');
+            const musicFrame = document.getElementById('musicFrame');
+            const musicIcon = document.getElementById('musicIcon');
+            
+            if (musicEnabled) {
+                // 尝试播放网易云音乐
+                try {
+                    // 修改iframe的src来启用自动播放
+                    const currentSrc = musicFrame.src;
+                    const autoPlaySrc = currentSrc.replace('auto=0', 'auto=1');
+                    musicFrame.src = autoPlaySrc;
+                    
+                    // 同时创建一个可见的播放器作为备选
+                    if (!window.visibleMusicPlayer) {
+                        createVisibleMusicPlayer();
+                    }
+                    
+                    musicIcon.textContent = '🔇';
+                    console.log('音乐开启 - Two Is Better Than One');
+                } catch (e) {
+                    console.log('网易云音乐播放失败，使用备选方案');
+                    createFallbackMusic();
+                }
+            } else {
+                // 停止播放
+                const pauseSrc = musicFrame.src.replace('auto=1', 'auto=0');
+                musicFrame.src = pauseSrc;
+                
+                musicIcon.textContent = '🎵';
+                console.log('音乐关闭');
+            }
+        }
+
+        function createVisibleMusicPlayer() {
+            // 创建一个可见的音乐播放器
+            const player = document.createElement('div');
+            player.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                right: 20px;
+                background: rgba(0, 0, 0, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 10px;
+                padding: 10px;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                font-size: 12px;
+                color: white;
+            `;
+            player.innerHTML = `
+                <div>🎵 Two Is Better Than One</div>
+                <iframe 
+                    frameborder="no" 
+                    border="0" 
+                    marginwidth="0" 
+                    marginheight="0" 
+                    width=200 
+                    height=32 
+                    src="https://music.163.com/outchain/player?type=2&id=26787229&auto=1&height=32">
+                </iframe>
+            `;
+            document.body.appendChild(player);
+            window.visibleMusicPlayer = player;
+        }
+
+        function createFallbackMusic() {
+            // 备用音乐方案
+            if (!window.backgroundMusic) {
+                window.backgroundMusic = new Audio();
+                // 使用免费的背景音乐链接
+                window.backgroundMusic.src = 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
+                window.backgroundMusic.loop = true;
+                window.backgroundMusic.volume = 0.3;
+                
+                window.backgroundMusic.play().catch(e => {
+                    console.log('备用音乐播放失败');
+                });
+            } else {
+                window.backgroundMusic.play();
+            }
         }
 
         function toggleParticles() {
